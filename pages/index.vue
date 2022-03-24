@@ -24,7 +24,7 @@
             b-table-column(field="id" label="ID" width="40" sortable v-slot="props")
               p {{ props.row.id }}
             b-table-column(field="name" label="Nombre" width="40" sortable v-slot="props")
-              p {{ props.row.name }}
+              nuxt-link(:to="'region/' + props.row.id") {{ props.row.name }}
             b-table-column(field="entidades" label="Total Devices" width="40" sortable v-slot="props")
               p {{ getTotalDevices(groupByRegion[props.row.id]) }}
             b-table-column(field="entidades" label="Total Entidades" width="40" sortable v-slot="props")

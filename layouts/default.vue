@@ -39,10 +39,10 @@ export default {
         },
         {
           title: 'Region',
-          to: { name: 'regiones' }
+          to: { name: 'region' }
         },
         {
-          title: 'Nokia',
+          title: 'Inventory',
           to: { name: 'nokia' }
         },
       ]
