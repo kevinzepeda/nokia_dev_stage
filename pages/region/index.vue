@@ -2,6 +2,7 @@
   .container
     .columns
       .column
+        h1.title Todas las regiones
         b-field(label="Selecciona una region")
           b-select(placeholder="Region" v-model="region")
             option(

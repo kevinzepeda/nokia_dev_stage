@@ -2,7 +2,8 @@
   .container
     .columns
       .column
-        h1.title Device {{ ip }}
+        h1.title {{ dataByIP(groupByIP)[0].sysname }}
+        h2.subtitle {{ ip }} | {{ dataByIP(groupByIP)[0].type }} 
     .columns
       .column
         b-table(:data="dataByIP(groupByIP)"
@@ -29,10 +30,6 @@
                 checkable
                 :checkbox-position="checkboxPosition"
           )
-            b-table-column(field="source_ip" label="IP" width="40" sortable v-slot="props" searchable)
-              p {{ props.row.source_ip }}
-            b-table-column(field="type" label="Type" width="40" sortable v-slot="props" searchable)
-              p {{ props.row.type }}
             b-table-column(field="entry" label="Entidad" width="40" sortable v-slot="props" searchable)
               p {{ props.row.entry }}
             b-table-column(field="is_compliant" label="Compliance" width="40" sortable v-slot="props" searchable)
@@ -40,6 +37,8 @@
               span.tag.is-danger(v-else) No
             b-table-column(field="region" label="Region" width="40" sortable v-slot="props" searchable)
               p {{ props.row.region }}
+            b-table-column(field="scenario" label="Scenario" width="40" sortable v-slot="props" searchable)
+              p {{ props.row.scenario }}
             b-table-column(field="mobile" label="Mobile" width="40" sortable v-slot="props" searchable)
               p {{ props.row.mobile === "NA" ? "Undefined" : props.row.mobile ? "Mobile" : "No mobile" }}
             template(#detail="props")

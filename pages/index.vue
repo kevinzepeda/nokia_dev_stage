@@ -1,10 +1,23 @@
 <template lang="pug">
   .container
     .columns
+      .column
+        h1.title Nokia Dashboard
+    .columns
       .column.is-4
         .container(v-if="groupByRegion !== null")
-          pie-chart(:data="pieData" :options="options")
-      .column.is-8
+            h2.subtitle Devices by Region
+            pie-chart(:data="pieRegion(groupByRegion)" :options="options")
+      .column.is-4
+        .container(v-if="groupByRegion !== null")
+          h2.subtitle Mobile Compliance
+          pie-chart(:data="pieMobileCompliance(groupByRegion)" :option="options" )
+      .column.is-4
+        .container(v-if="groupByRegion !== null")
+          h2.subtitle No Mobile Compliance
+          pie-chart(:data="pieNoMobileCompliance(groupByRegion)" :option="options" )
+    .columns
+      .column
         b-table(:data="regiones"
                 :per-page="perPage"
                 :current-page.sync="currentPage"
@@ -21,23 +34,29 @@
                 :debounce-page-input="inputDebounce"
                 :checkbox-position="checkboxPosition"
           )
-            b-table-column(field="id" label="ID" width="40" sortable v-slot="props")
+            b-table-column(field="id" label="ID" subheading="Total" width="40" sortable v-slot="props")
               p {{ props.row.id }}
-            b-table-column(field="name" label="Nombre" width="40" sortable v-slot="props")
+            b-table-column(field="name" label="Name" width="40" sortable v-slot="props")
               nuxt-link(:to="'region/' + props.row.id") {{ props.row.name }}
-            b-table-column(field="entidades" label="Total Devices" width="40" sortable v-slot="props")
-              p {{ getTotalDevices(groupByRegion[props.row.id]) }}
-            b-table-column(field="entidades" label="Total Entidades" width="40" sortable v-slot="props")
+            b-table-column(field="entidades" label="Total Devices" :subheading="getTotalDevices(groupByRegion)" width="40" sortable v-slot="props")
+              p {{ getDevices(groupByRegion[props.row.id]) }}
+            b-table-column(field="entidades" label="Total Units" width="40" sortable v-slot="props")
               p {{ groupByRegion[props.row.id].length }}
-            b-table-column(field="mobile" label="Mobile" width="40" sortable v-slot="props")
-              p {{ getTotalMobile(groupByRegion[props.row.id]) }}
-            b-table-column(field="noMobile" label="No Mobile" width="40" sortable v-slot="props")
-              p {{ getTotalNoMobile(groupByRegion[props.row.id]) }}
-            b-table-column(field="compliance" label="Compliance" width="40" sortable v-slot="props")
-              p {{ getTotalCompliance(groupByRegion[props.row.id]) }}
+            b-table-column(field="compliance" label="Qos Compliance" width="40" sortable v-slot="props")
+              p {{ getCompliance(groupByRegion[props.row.id]) }}
             b-table-column(field="noQos" label="Not QoS" width="40" sortable v-slot="props")
-              p {{ getTotalNoCompliance(groupByRegion[props.row.id]) }}
-
+              p {{ getNoCompliance(groupByRegion[props.row.id]) }}
+            b-table-column(field="compliance" label="Compliance" :subheading="getTotalCompliance(groupByRegion) + '%'" width="40" sortable v-slot="props")
+              p {{ getPercentCompliance(groupByRegion[props.row.id]) }} %
+            b-table-column(field="mobile" label="Mobile" width="40" sortable v-slot="props")
+              p {{ getMobile(groupByRegion[props.row.id]) }}
+            b-table-column(field="mobile" label="Mobile Compliance" width="40" sortable v-slot="props")
+              p {{ getMobileCompliance(groupByRegion[props.row.id]) }} %
+            b-table-column(field="noMobile" label="No Mobile" width="40" sortable v-slot="props")
+              p {{ getNoMobile(groupByRegion[props.row.id]) }}
+            b-table-column(field="noMobile" label="No Mobile Compliance" width="40" sortable v-slot="props")
+              p {{ getNoMobileCompliance(groupByRegion[props.row.id]) }} %
+        
 </template>
 
 <script>
@@ -45,7 +64,7 @@ export default {
   data(){
     return {
       regiones: [
-        {id: "0", name: "Desconocido"},
+        {id: "0", name: "Unknown"},
         {id: "1", name: "Region 1"},
         {id: "2", name: "Region 2"},
         {id: "3", name: "Region 3"},
@@ -85,83 +104,43 @@ export default {
       return group;
     }, {});
     const options = {
-      borderWidth: "10px",
-      hoverBackgroundColor: "red",
-      hoverBorderWidth: "10px"
-    }
+      responsive: true,
+      maintainAspectRatio: false,
+      devicePixelRatio: 2,
+      tooltips: {
+        enabled: true,
+      },
+      title: {
+        display: true,
+        text: '% Device by Region',
+        position: 'bottom',
+        fontSize: 20,
+      },
+    };
     return { entrys , groupByRegion, options }
   },
   methods:{
-    dataByRegion(groupByRegion){
-      return groupByRegion[this.region]
-    },
-    getTotalDevices(dataByRegion){
-      const groupByIP = dataByRegion.reduce((group, entry) => {
-        const { source_ip } = entry;
-        group[source_ip] = group[source_ip] ?? [];
-        group[source_ip].push(entry);
-        return group;
-      }, {});
-      return Object.keys(groupByIP).length
-    },
-    getTotalMobile(dataByRegion){
-      let mobile = []
-      dataByRegion.map((item)=>{
-        if(item.mobile){
-          mobile.push(1)
+    getDevices(dataByRegion){
+      let uniqueDevices = []
+      dataByRegion.forEach(device => {
+        if(!uniqueDevices.includes(device.source_ip)){
+          uniqueDevices.push(device.source_ip);
         }
       });
-      return mobile.length
+      return uniqueDevices.length
     },
-    getTotalNoMobile(dataByRegion){
-      let noMobile = []
-      dataByRegion.map((item)=>{
-        if(item.mobile === 0){
-          noMobile.push(1)
-        }
-      });
-      return noMobile.length
+    getTotalDevices(groupByRegion){
+      const devices = Array.from({length: 10}, (_,index) => this.getDevices(groupByRegion[index]))
+      return devices.reduce((acumulator,current) => acumulator + current)
     },
-    getTotalNoCompliance(dataByRegion){
-      let notCompliant = []
-      dataByRegion.map((item)=>{
-        if(item.is_compliant === 0){
-          notCompliant.push(1)
-        }
-      });
-      return notCompliant.length
+    getTotalCompliance(groupByRegion){
+      const compliance = Array.from({length: 10}, (_,index) => this.getPercentCompliance(groupByRegion[index]))
+      return (compliance.reduce((a,c) => Number(a) + Number(c)) / 10).toFixed(2)
     },
-    getTotalCompliance(dataByRegion){
-      let compliance = []
-      dataByRegion.map((item)=>{
-        if(item.is_compliant){
-          compliance.push(1)
-        }
-      });
-      return compliance.length
-    },
-    pieData(groupByRegion){
-      const data = groupByRegion[this.region]
-      if (this.region !== null){
-        this.compliant = data.filter(function(value) { return value.is_compliant === 1 }).length;
-        this.notCompliant = data.filter(function(value) { return value.is_compliant === 0 }).length;
-      }
-      return {
-        hoverBackgroundColor: "red",
-        hoverBorderWidth: 10,
-        labels: ["Green", "Red"],
-        datasets: [
-          {
-            label: "Data One",
-            backgroundColor: ["#41B883", "#E46651"],
-            data: [this.compliant, this.notCompliant]
-          }
-        ]
-      }
-    }
-  },
-  computed:{
-    pieData(){
+    pieRegion(groupByRegion){
+      const devices = Array.from({length: 10}, (_,index) => this.getDevices(groupByRegion[index]))
+      const total = devices.reduce((acumulator,current) => acumulator + current)
+      const percent = Array.from({length: 10}, (_, index) => (devices[index] / total * 100).toFixed(2))
       return {
         hoverBackgroundColor: "red",
         hoverBorderWidth: 5,
@@ -170,12 +149,70 @@ export default {
           {
             label: "Data One",
             backgroundColor: ["#41B883", "#E46651","#BF00FF","#F2F5A9","#5858FA","#F2E0F7","#A9F5A9","#E6E0F8","#D8D8D8","#F5A9A9"],
-            data: [155, 46, 44, 50, 68, 67, 48, 76, 62, 99]
+            data: percent
           }
         ]
       }
-    }
-  }
+    },
+    pieMobileCompliance(groupByRegion){
+      const mobile = Array.from({length: 10}, (_,index) => this.getMobileCompliance(groupByRegion[index]))
+      const percent = mobile.reduce((a,c) => Number(a) + Number(c)) / 10
+      return {
+        hoverBackgroundColor: "red",
+        hoverBorderWidth: 5,
+        labels: ["Compliance","No QoS"],
+        datasets: [
+          {
+            label: "Mobile compliance",
+            backgroundColor: ["#1bd7a6","#fe5858"],
+            data: [percent, (100 - percent).toFixed(2)]
+          }
+        ]
+      }
+    },
+    pieNoMobileCompliance(groupByRegion){
+      const mobile = Array.from({length: 10}, (_,index) => this.getNoMobileCompliance(groupByRegion[index]))
+      const percent = mobile.reduce((a,c) => Number(a) + Number(c)) / 10
+      return {
+        hoverBackgroundColor: "red",
+        hoverBorderWidth: 5,
+        labels: ["Compliance","No QoS"],
+        datasets: [
+          {
+            label: "Mobile compliance",
+            backgroundColor: ["#1bd7a6","#fe5858"],
+            data: [percent, (100 - percent).toFixed(2)]
+          }
+        ]
+      }
+    },
+    getMobile(dataByRegion){
+      return dataByRegion.filter(i => i.mobile).length
+    },
+    getMobileCompliance(dataByRegion){
+      const d = dataByRegion.filter(i => i.mobile)
+      return (d.filter(i => i.is_compliant).length / d.length * 100).toFixed(2)
+    },
+    getNoMobile(dataByRegion){
+      return dataByRegion.filter(i => !i.mobile).length
+    },
+    getNoMobileCompliance(dataByRegion){
+      const d = dataByRegion.filter(i => !i.mobile)
+      if (d.length){
+        return (d.filter(i => i.is_compliant).length / d.length * 100).toFixed(2)
+      }
+      return 0
+    },
+    getCompliance(dataByRegion){
+      return dataByRegion.filter(i => i.is_compliant).length
+    },
+    getNoCompliance(dataByRegion){
+      return dataByRegion.filter(i => !i.is_compliant).length
+    },
+    getPercentCompliance(dataByRegion){
+      return (dataByRegion.filter(i => i.is_compliant).length / dataByRegion.length * 100).toFixed(2)
+    },
+  },
 }
 </script>
 

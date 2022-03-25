@@ -2,7 +2,7 @@
   .container
     .columns
       .column
-        h1 Nokia
+        h1.title Inventory
     b-table(:data="entrys"
             detailed
             :paginated="isPaginated"
