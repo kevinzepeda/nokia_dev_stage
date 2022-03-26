@@ -5,8 +5,7 @@
         h1.title Region {{ region }}
     .columns
       .column
-        b-table(:data="dataByRegion(groupByRegion)"
-                detailed
+        b-table(:data="allDevices"
                 :paginated="isPaginated"
                 :per-page="perPage"
                 :current-page.sync="currentPage"
@@ -26,37 +25,25 @@
                 :pagination-order="paginationOrder"
                 :page-input-position="inputPosition"
                 :debounce-page-input="inputDebounce"
+                :checked-rows.sync="checked"
                 checkable
+                :is-row-checkable="(row) => groupByIP[row.source_ip].filter((item) =>{return item.is_compliant === 0}).length"
                 :checkbox-position="checkboxPosition"
           )
+            b-table-column(field="sysname" label="Sysname" sortable v-slot="props" searchable)
+              nuxt-link(:to="'/device/' + props.row.source_ip") {{ props.row.sysname }}
             b-table-column(field="source_ip" label="IP" width="40" sortable v-slot="props" searchable)
               nuxt-link(:to="'/device/' + props.row.source_ip") {{ props.row.source_ip }}
             b-table-column(field="type" label="Type" width="40" sortable v-slot="props" searchable)
               p {{ props.row.type }}
-            b-table-column(field="entry" label="Entidad" width="40" sortable v-slot="props" searchable)
-              p {{ props.row.entry }}
-            b-table-column(field="is_compliant" label="Compliance" width="40" sortable v-slot="props" searchable)
-              span.tag.is-success(v-if="props.row.is_compliant") Yes
-              span.tag.is-danger(v-else) No
-            b-table-column(field="region" label="Region" width="40" sortable v-slot="props" searchable)
-              p {{ props.row.region }}
-            b-table-column(field="mobile" label="Mobile" width="40" sortable v-slot="props" searchable)
-              p {{ props.row.mobile === "NA" ? "Undefined" : props.row.mobile ? "Mobile" : "No mobile" }}
-            template(#detail="props")
-              .columns
-                .column
-                  pre {{ props.row.rollback }}
-                .column
-                  pre {{ props.row.script }}
+            b-table-column(label="Compliance" width="40" sortable v-slot="props")
+              span.tag.is-danger(v-if="groupByIP[props.row.source_ip].filter((item) =>{return item.is_compliant === 0}).length") No
+              span.tag.is-success(v-else) Yes
             template(#empty)
-              .container
-                .columns
-                  .column
-                    p Selecciona una region
-      .column
-        .container(v-if="region !== null")
-          pie-chart(:data="pieData(groupByRegion)" :options="options")
-
+              .has-text-centered No Data
+      .column.is-3
+        pie-chart(:data="pieData(dataByRegion)" :options="options")
+    pre {{ checked }}
 </template>
 
 <script>
@@ -78,7 +65,8 @@ export default {
       region: null,
       compliant: 0,
       notCompliant: 0,
-      columns:[],
+      checked: [],
+      columns: [],
       isPaginated: true,
       isPaginationSimple: false,
       isPaginationRounded: false,
@@ -87,7 +75,7 @@ export default {
       sortIcon: 'arrow-up',
       sortIconSize: 'is-small',
       currentPage: 1,
-      perPage: 15,
+      perPage: 10,
       hasInput: false,
       paginationOrder: '',
       inputPosition: '',
@@ -95,12 +83,23 @@ export default {
       checkboxPosition: 'right'
     }
   },
-  async asyncData({ $axios }) {
+  async asyncData({ $axios , params}) {
     const entrys = await $axios.$get('https://kevinzepeda.github.io/etl-test/nokia.json')
+    const allDevices = await $axios.$get('https://kevinzepeda.github.io/etl-test/devices.json')
+    .then((devices) => devices.filter((device) => {
+      return device.region == params.id
+    }))
     const groupByRegion = entrys.reduce((group, entry) => {
       const { region } = entry;
       group[region] = group[region] ?? [];
       group[region].push(entry);
+      return group;
+    }, {});
+    const dataByRegion = groupByRegion[params.id]
+    const groupByIP = dataByRegion.reduce((group, entry) => {
+      const { source_ip } = entry;
+      group[source_ip] = group[source_ip] ?? [];
+      group[source_ip].push(entry);
       return group;
     }, {});
     const options = {
@@ -109,17 +108,13 @@ export default {
       hoverBorderWidth: "10px"
     }
 
-    return { entrys , groupByRegion, options }
+    return { dataByRegion, options, allDevices, groupByIP}
   },
   methods:{
-    dataByRegion(groupByRegion){
-      return groupByRegion[this.region]
-    },
-    pieData(groupByRegion){
-      const data = groupByRegion[this.region]
+    pieData(dataByRegion){
       if (this.region !== null){
-        this.compliant = data.filter(function(value) { return value.is_compliant === 1 }).length;
-        this.notCompliant = data.filter(function(value) { return value.is_compliant === 0 }).length;
+        this.compliant = dataByRegion.filter((i) => { return i.is_compliant === 1 }).length;
+        this.notCompliant = dataByRegion.filter((i) => { return i.is_compliant === 0 }).length;
       }
       return {
         hoverBackgroundColor: "red",
@@ -133,7 +128,7 @@ export default {
           }
         ]
       }
-    }
+    },
   },
   fetch(){
     this.region = this.$route.params.id

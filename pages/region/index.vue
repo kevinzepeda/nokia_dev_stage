@@ -56,13 +56,8 @@
                 .column
                   pre {{ props.row.script }}
             template(#empty)
-              .container
-                .columns
-                  .column
-                    p Selecciona una region
-      .column
-        .container(v-if="region !== null")
-          pie-chart(:data="pieData(groupByRegion)" :options="options")
+              .container.text-center
+                h3.title Selecciona una region
 
 </template>
 
@@ -116,31 +111,12 @@ export default {
       hoverBorderWidth: "10px"
     }
 
-    return { entrys , groupByRegion, options }
+    return { groupByRegion, options, allDevices }
   },
   methods:{
     dataByRegion(groupByRegion){
       return groupByRegion[this.region]
     },
-    pieData(groupByRegion){
-      const data = groupByRegion[this.region]
-      if (this.region !== null){
-        this.compliant = data.filter(function(value) { return value.is_compliant === 1 }).length;
-        this.notCompliant = data.filter(function(value) { return value.is_compliant === 0 }).length;
-      }
-      return {
-        hoverBackgroundColor: "red",
-        hoverBorderWidth: 5,
-        labels: ["Compliance", "Not compliance"],
-        datasets: [
-          {
-            label: "Data One",
-            backgroundColor: ["#41B883", "#E46651"],
-            data: [this.compliant, this.notCompliant]
-          }
-        ]
-      }
-    }
   }
 }
 </script>

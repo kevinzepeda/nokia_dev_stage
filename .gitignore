@@ -44,6 +44,7 @@ typings/
 # Optional npm cache directory
 .npm
 
+TODO.md
 # Optional eslint cache
 .eslintcache
 
