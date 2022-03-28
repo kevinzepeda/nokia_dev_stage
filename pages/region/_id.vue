@@ -105,7 +105,7 @@ export default {
       group[region].push(entry);
       return group;
     }, {});
-    const dataByRegion = groupByRegion[params.id]
+    const dataByRegion = groupByRegion[params.id] ? groupByRegion[params.id] : []
     const groupByIP = dataByRegion.reduce((group, entry) => {
       const { source_ip } = entry;
       group[source_ip] = group[source_ip] ?? [];
