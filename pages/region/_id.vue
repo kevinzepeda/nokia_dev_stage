@@ -53,6 +53,7 @@
       .column.is-3
         .h2.subtitle Device compliance
         pie-chart(:data="pieData(dataByRegion)" :options="options")
+    pre {{ toCreateMOP }}
 </template>
 
 <script>
@@ -145,6 +146,15 @@ export default {
           }
         ]
       }
+    },
+  },
+  computed:{
+    toCreateMOP(){
+      let devices = []
+      this.checked.forEach(i => {
+        devices.push(i.source_ip)
+      });
+      return this.dataByRegion.filter(i => {return !i.is_compliant && i.mobile && devices.includes(i.source_ip)})
     },
   },
   fetch(){

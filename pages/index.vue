@@ -50,11 +50,11 @@
               p {{ getPercentCompliance(groupByRegion[props.row.id]) }} %
             b-table-column(field="mobile" label="Mobile" width="40" sortable v-slot="props")
               p {{ getMobile(groupByRegion[props.row.id]) }}
-            b-table-column(field="mobile" label="Mobile Compliance" width="40" sortable v-slot="props")
+            b-table-column(field="mobile" label="Mobile Compliance" width="40" :subheading="(Array.from({length: 10}, (_,index) => this.getMobileCompliance(groupByRegion[index])).reduce((a,c) => Number(a) + Number(c)) / 10).toFixed(2) + ' %'" sortable v-slot="props")
               p {{ getMobileCompliance(groupByRegion[props.row.id]) }} %
             b-table-column(field="noMobile" label="No Mobile" width="40" sortable v-slot="props")
               p {{ getNoMobile(groupByRegion[props.row.id]) }}
-            b-table-column(field="noMobile" label="No Mobile Compliance" width="40" sortable v-slot="props")
+            b-table-column(field="noMobile" label="No Mobile Compliance" width="40" :subheading="(Array.from({length: 10}, (_,index) => this.getNoMobileCompliance(groupByRegion[index])).reduce((a,c) => Number(a) + Number(c)) / 10).toFixed(2) + ' %'" sortable v-slot="props")
               p {{ getNoMobileCompliance(groupByRegion[props.row.id]) }} %
         
 </template>
@@ -193,7 +193,7 @@ export default {
           {
             label: "Mobile compliance",
             backgroundColor: ["#1bd7a6","#fe5858"],
-            data: [percent, (100 - percent).toFixed(2)]
+            data: [percent.toFixed(2), (100 - percent).toFixed(2)]
           }
         ]
       }
@@ -209,7 +209,7 @@ export default {
           {
             label: "Mobile compliance",
             backgroundColor: ["#1bd7a6","#fe5858"],
-            data: [percent, (100 - percent).toFixed(2)]
+            data: [percent.toFixed(2), (100 - percent).toFixed(2)]
           }
         ]
       }
