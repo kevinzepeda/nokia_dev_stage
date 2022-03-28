@@ -11,11 +11,11 @@
       .column.is-4
         .container(v-if="groupByRegion !== null")
           h2.subtitle Mobile Compliance
-          pie-chart(:data="pieMobileCompliance(groupByRegion)" :option="options" )
+          pie-chart(:data="pieMobileCompliance(groupByRegion)" :options="optionsMobile" )
       .column.is-4
         .container(v-if="groupByRegion !== null")
           h2.subtitle No Mobile Compliance
-          pie-chart(:data="pieNoMobileCompliance(groupByRegion)" :option="options" )
+          pie-chart(:data="pieNoMobileCompliance(groupByRegion)" :options="optionsNoMobile" )
     .columns
       .column
         b-table(:data="regiones"
@@ -92,7 +92,35 @@ export default {
       paginationOrder: '',
       inputPosition: '',
       inputDebounce: '',
-      checkboxPosition: 'right'
+      checkboxPosition: 'right',
+      optionsMobile: {
+        responsive: true,
+        maintainAspectRatio: false,
+        devicePixelRatio: 2,
+        tooltips: {
+          enabled: true,
+        },
+        title: {
+          display: true,
+          text: '% Compliance in Mobile',
+          position: 'bottom',
+          fontSize: 20,
+        },
+      },
+      optionsNoMobile: {
+        responsive: true,
+        maintainAspectRatio: false,
+        devicePixelRatio: 2,
+        tooltips: {
+          enabled: true,
+        },
+        title: {
+          display: true,
+          text: '% Compliance in No Mobile',
+          position: 'bottom',
+          fontSize: 20,
+        },
+      }
     }
   },
   async asyncData({ $axios }) {

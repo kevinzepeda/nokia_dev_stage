@@ -3,9 +3,11 @@
     .columns
       .column
         h1.title {{ dataByIP(groupByIP)[0].sysname }}
-        h2.subtitle {{ ip }} | {{ dataByIP(groupByIP)[0].type }} 
+        h2.subtitle R{{dataByIP(groupByIP)[0].region}} | {{ ip }} | {{ dataByIP(groupByIP)[0].type }}
     .columns
-      .column
+      .column.is-9
+        h3.subtitle Units: 
+          b {{ dataByIP(groupByIP).length }}
         b-table(:data="dataByIP(groupByIP)"
                 detailed
                 :paginated="isPaginated"
@@ -27,28 +29,25 @@
                 :pagination-order="paginationOrder"
                 :page-input-position="inputPosition"
                 :debounce-page-input="inputDebounce"
-                checkable
-                :checkbox-position="checkboxPosition"
           )
             b-table-column(field="entry" label="Entidad" width="40" sortable v-slot="props" searchable)
               p {{ props.row.entry }}
+            b-table-column(field="scenario" label="Scenario" width="40" sortable v-slot="props" searchable)
+              p {{ props.row.scenario }}
             b-table-column(field="is_compliant" label="Compliance" width="40" sortable v-slot="props" searchable)
               span.tag.is-success(v-if="props.row.is_compliant") Yes
               span.tag.is-danger(v-else) No
-            b-table-column(field="region" label="Region" width="40" sortable v-slot="props" searchable)
-              p {{ props.row.region }}
-            b-table-column(field="scenario" label="Scenario" width="40" sortable v-slot="props" searchable)
-              p {{ props.row.scenario }}
             b-table-column(field="mobile" label="Mobile" width="40" sortable v-slot="props" searchable)
               p {{ props.row.mobile === "NA" ? "Undefined" : props.row.mobile ? "Mobile" : "No mobile" }}
+            template(#bottom-left)
+              b  Not QoS units: {{ dataByIP(groupByIP).filter(i => {return i.is_compliant === 0}).length }}
             template(#detail="props")
-              .columns
-                .column
-                  pre {{ props.row.rollback }}
-                .column
-                  pre {{ props.row.script }}
-      .column
+              div
+                pre.diff {{ props.row.rollback }}
+                pre.diff {{ props.row.script }}
+      .column.is-3
         .container(v-if="ip !== null")
+          h3.subtitle Device Compliance
           pie-chart(:data="pieData(groupByIP)" :options="options")
 
 </template>
@@ -69,7 +68,7 @@ export default {
       sortIcon: 'arrow-up',
       sortIconSize: 'is-small',
       currentPage: 1,
-      perPage: 15,
+      perPage: 10,
       hasInput: false,
       paginationOrder: '',
       inputPosition: '',
@@ -86,9 +85,18 @@ export default {
       return group;
     }, {});
     const options = {
-      borderWidth: "10px",
-      hoverBackgroundColor: "red",
-      hoverBorderWidth: "10px"
+      responsive: true,
+      maintainAspectRatio: false,
+      devicePixelRatio: 2,
+      tooltips: {
+        enabled: true,
+      },
+      title: {
+        display: true,
+        text: '% Compliance by unit',
+        position: 'bottom',
+        fontSize: 20,
+      },
     }
 
     return { entrys , groupByIP, options }
@@ -100,8 +108,8 @@ export default {
     pieData(groupByIP){
       const data = groupByIP[this.ip]
       if (this.ip !== null){
-        this.compliant = data.filter(function(value) { return value.is_compliant === 1 }).length;
-        this.notCompliant = data.filter(function(value) { return value.is_compliant === 0 }).length;
+        this.compliant = (data.filter((i) =>{ return i.is_compliant}).length / data.length * 100).toFixed(1)
+        this.notCompliant = (100 - this.compliant).toFixed(1)
       }
       return {
         hoverBackgroundColor: "red",
@@ -124,5 +132,20 @@ export default {
 </script>
 
 <style>
-
+pre.diff {
+    width: 50%;
+    vertical-align: top;
+    box-sizing: border-box;
+    padding: 0 20px;
+    border: none;
+    border-right: 1px solid #ccc;
+    resize: none;
+    outline: none;
+    background-color: #f6f6f6;
+}
+.diff span, pre.diff {
+    display: inline-block;
+    font-size: 12px;
+    font-family: monospace;
+}
 </style>

@@ -1,10 +1,17 @@
 <template lang="pug">
   .container
     .columns
-      .column
+      .column.is-9
         h1.title Region {{ region }}
+      .column.is-3
+        .buttons.mt-2(align="is-left")
+          b-button.is-danger(v-if="checked.length" @click="checked = []") Clear
+          b-button.is-info.is-light(v-else @click="checked = allDevices.filter(row =>{return row.is_compliant === 0})") Select all
+          b-button.is-info Generate MOP
     .columns
       .column
+        h2.subtitle All Devices: 
+          b {{ allDevices.length }}
         b-table(:data="allDevices"
                 :paginated="isPaginated"
                 :per-page="perPage"
@@ -27,23 +34,25 @@
                 :debounce-page-input="inputDebounce"
                 :checked-rows.sync="checked"
                 checkable
-                :is-row-checkable="(row) => groupByIP[row.source_ip].filter((item) =>{return item.is_compliant === 0}).length"
+                :is-row-checkable="(row) => row.is_compliant === 0"
                 :checkbox-position="checkboxPosition"
           )
-            b-table-column(field="sysname" label="Sysname" sortable v-slot="props" searchable)
+            b-table-column(field="sysname" width="40" label="Sysname" sortable v-slot="props" searchable)
               nuxt-link(:to="'/device/' + props.row.source_ip") {{ props.row.sysname }}
             b-table-column(field="source_ip" label="IP" width="40" sortable v-slot="props" searchable)
               nuxt-link(:to="'/device/' + props.row.source_ip") {{ props.row.source_ip }}
-            b-table-column(field="type" label="Type" width="40" sortable v-slot="props" searchable)
+            b-table-column(field="type" label="Type" width="40" numeric sortable v-slot="props" searchable)
               p {{ props.row.type }}
-            b-table-column(label="Compliance" width="40" sortable v-slot="props")
-              span.tag.is-danger(v-if="groupByIP[props.row.source_ip].filter((item) =>{return item.is_compliant === 0}).length") No
-              span.tag.is-success(v-else) Yes
+            b-table-column(field="is_compliant" label="Compliance" width="40" sortable v-slot="props" searchable)
+              span.tag.is-success(v-if="props.row.is_compliant") 100 %
+              span.tag.is-danger(v-else) {{ (groupByIP[props.row.source_ip].filter(i =>{return i.is_compliant}).length / groupByIP[props.row.source_ip].length * 100).toFixed(1) }} %
+            template(#bottom-left)
+              b  Checked rows: {{ checked.length }}
             template(#empty)
-              .has-text-centered No Data
+              .has-text-centered No Devices info
       .column.is-3
+        .h2.subtitle Device compliance
         pie-chart(:data="pieData(dataByRegion)" :options="options")
-    pre {{ checked }}
 </template>
 
 <script>
@@ -103,23 +112,31 @@ export default {
       return group;
     }, {});
     const options = {
-      borderWidth: "10px",
-      hoverBackgroundColor: "red",
-      hoverBorderWidth: "10px"
+      responsive: true,
+      maintainAspectRatio: false,
+      devicePixelRatio: 2,
+      tooltips: {
+        enabled: true,
+      },
+      title: {
+        display: true,
+        text: '% Compliance by device',
+        position: 'bottom',
+        fontSize: 20,
+      },
     }
-
     return { dataByRegion, options, allDevices, groupByIP}
   },
   methods:{
     pieData(dataByRegion){
       if (this.region !== null){
-        this.compliant = dataByRegion.filter((i) => { return i.is_compliant === 1 }).length;
-        this.notCompliant = dataByRegion.filter((i) => { return i.is_compliant === 0 }).length;
+        this.compliant = (dataByRegion.filter((i) => { return i.is_compliant}).length / dataByRegion.length * 100).toFixed(1)
+        this.notCompliant = (100 - this.compliant).toFixed(1)
       }
       return {
         hoverBackgroundColor: "red",
         hoverBorderWidth: 5,
-        labels: ["Compliance", "Not compliance"],
+        labels: ["Compliance", "Not QoS"],
         datasets: [
           {
             label: "Data One",
