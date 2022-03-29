@@ -5,9 +5,9 @@
         h1.title Region {{ region }}
       .column.is-3
         .buttons.mt-2(align="is-left")
-          b-button.is-danger(v-if="checked.length" @click="checked = []") Clear
+          b-button.is-danger(v-if="checked.length" @click="checked = []") Clear all
           b-button.is-info.is-light(v-else @click="checked = allDevices.filter(row =>{return row.is_compliant === 0})") Select all
-          b-button.is-info(@click="getFile()") Generate MOP
+          b-button.is-info(@click="getFile()" :disabled="checked.length === 0") Generate MOP
     .columns
       .column
         h2.subtitle All Devices: 
@@ -121,7 +121,7 @@ export default {
       },
       title: {
         display: true,
-        text: '% Compliance by device',
+        text: '% Compliance by region',
         position: 'bottom',
         fontSize: 20,
       },
@@ -150,7 +150,7 @@ export default {
     getFile(){
       this.$axios.post("https://5c92-2806-105e-c-7a1b-3b3b-4664-9df7-4ca9.ngrok.io/", {
         items: this.toCreateMOP
-      })
+      },{ responseType: 'blob'})
       .then((response) => {
           const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/zip' }))
           window.open(url)

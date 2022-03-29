@@ -1,9 +1,14 @@
 <template lang="pug">
   .container
     .columns
-      .column
+      .column.is-9
         h1.title {{ dataByIP(groupByIP)[0].sysname }}
         h2.subtitle R{{dataByIP(groupByIP)[0].region}} | {{ ip }} | {{ dataByIP(groupByIP)[0].type }}
+      .column.is-3
+        .buttons.mt-2(align="is-left")
+          b-button.is-danger(v-if="checked.length" @click="checked = []") Clear all
+          b-button.is-info.is-light(v-else @click="checked = dataByIP(groupByIP).filter(row =>{return row.is_compliant === 0})") Select all
+          b-button.is-info(@click="getFile()" :disabled="checked.length === 0") Generate MOP
     .columns
       .column.is-9
         h3.subtitle Units: 
@@ -29,6 +34,10 @@
                 :pagination-order="paginationOrder"
                 :page-input-position="inputPosition"
                 :debounce-page-input="inputDebounce"
+                :checked-rows.sync="checked"
+                checkable
+                :is-row-checkable="(row) => row.is_compliant === 0"
+                :checkbox-position="checkboxPosition"
           )
             b-table-column(field="entry" label="Entidad" width="40" sortable v-slot="props" searchable)
               p {{ props.row.entry }}
@@ -49,7 +58,6 @@
         .container(v-if="ip !== null")
           h3.subtitle Device Compliance
           pie-chart(:data="pieData(groupByIP)" :options="options")
-
 </template>
 
 <script>
@@ -73,7 +81,8 @@ export default {
       paginationOrder: '',
       inputPosition: '',
       inputDebounce: '',
-      checkboxPosition: 'right'
+      checkboxPosition: 'left',
+      checked: []
     }
   },
   async asyncData({ $axios }) {
@@ -93,7 +102,7 @@ export default {
       },
       title: {
         display: true,
-        text: '% Compliance by unit',
+        text: '% Compliance by device',
         position: 'bottom',
         fontSize: 20,
       },
@@ -104,6 +113,15 @@ export default {
   methods:{
     dataByIP(groupByIP){
       return groupByIP[this.ip]
+    },
+    getFile(){
+      this.$axios.post("https://5c92-2806-105e-c-7a1b-3b3b-4664-9df7-4ca9.ngrok.io/", {
+        items: this.checked
+      },{ responseType: 'blob'})
+      .then((response) => {
+          const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/zip' }))
+          window.open(url)
+      })
     },
     pieData(groupByIP){
       const data = groupByIP[this.ip]
