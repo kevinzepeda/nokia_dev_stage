@@ -54,8 +54,14 @@
             template(#empty)
               .has-text-centered No Devices info
       .column.is-3
-        .h2.subtitle Device compliance
-        pie-chart(:data="pieData(dataByRegion)" :options="options")
+        .h2.subtitle Region compliance
+        .container
+          p Compliance: 
+            b {{ compliant }}%
+          p Not QoS: 
+            b {{ notCompliant }}%
+          p ___
+          pie-chart(:data="pieData(dataByRegion)" :options="options")
 </template>
 
 <script>

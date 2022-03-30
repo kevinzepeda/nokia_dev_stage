@@ -57,7 +57,13 @@
       .column.is-3
         .container(v-if="ip !== null")
           h3.subtitle Device Compliance
-          pie-chart(:data="pieData(groupByIP)" :options="options")
+          .container
+            p Compliance: 
+              b {{ compliant }}%
+            p Not QoS: 
+              b {{ notCompliant }}%
+            p ___
+            pie-chart(:data="pieData(groupByIP)" :options="options")
 </template>
 
 <script>

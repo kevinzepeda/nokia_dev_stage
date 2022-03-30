@@ -40,6 +40,8 @@
               nuxt-link(:to="'region/' + props.row.id") {{ props.row.name }}
             b-table-column(field="entidades" label="Total Devices" :subheading="getTotalDevices(groupByRegion)" width="40" sortable v-slot="props")
               p {{ getDevices(groupByRegion[props.row.id]) }}
+            b-table-column(field="entidades" label="% Devices" width="40" sortable v-slot="props")
+              p {{ (getDevices(groupByRegion[props.row.id]) / getTotalDevices(groupByRegion) * 100).toFixed(2) }}%
             b-table-column(field="entidades" label="Total Units" width="40" sortable v-slot="props")
               p {{ groupByRegion[props.row.id] ? groupByRegion[props.row.id].length : 0 }}
             b-table-column(field="compliance" label="Qos Compliance" width="40" sortable v-slot="props")
