@@ -37,12 +37,15 @@
                 :is-row-checkable="(row) => row.is_compliant === 0"
                 :checkbox-position="checkboxPosition"
           )
-            b-table-column(field="sysname" width="40" label="Sysname" sortable v-slot="props" searchable)
+            b-table-column(field="sysname" label="Sysname" sortable v-slot="props" searchable)
               nuxt-link(:to="'/device/' + props.row.source_ip") {{ props.row.sysname }}
             b-table-column(field="source_ip" label="IP" width="40" sortable v-slot="props" searchable)
               nuxt-link(:to="'/device/' + props.row.source_ip") {{ props.row.source_ip }}
             b-table-column(field="type" label="Type" width="40" numeric sortable v-slot="props" searchable)
               p {{ props.row.type }}
+            b-table-column(field="is_compliant" label="Mobile" width="40" sortable v-slot="props" searchable)
+              span.tag.is-success.is-light(v-if="(groupByIP[props.row.source_ip].filter(i =>{return i.is_compliant && i.mobile}).length / groupByIP[props.row.source_ip].filter(i =>{return i.mobile}).length * 100).toFixed(1) == 100") 100 %
+              span.tag.is-danger.is-light(v-else) {{ (groupByIP[props.row.source_ip].filter(i =>{return i.is_compliant && i.mobile}).length / groupByIP[props.row.source_ip].filter(i =>{return i.mobile}).length * 100).toFixed(1) }} %
             b-table-column(field="is_compliant" label="Compliance" width="40" sortable v-slot="props" searchable)
               span.tag.is-success(v-if="props.row.is_compliant") 100 %
               span.tag.is-danger(v-else) {{ (groupByIP[props.row.source_ip].filter(i =>{return i.is_compliant}).length / groupByIP[props.row.source_ip].length * 100).toFixed(1) }} %

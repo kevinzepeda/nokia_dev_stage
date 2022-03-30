@@ -39,7 +39,7 @@
                 :is-row-checkable="(row) => row.is_compliant === 0"
                 :checkbox-position="checkboxPosition"
           )
-            b-table-column(field="entry" label="Entidad" width="40" sortable v-slot="props" searchable)
+            b-table-column(field="entry" label="Entidad" sortable v-slot="props" searchable)
               p {{ props.row.entry }}
             b-table-column(field="scenario" label="Scenario" width="40" sortable v-slot="props" searchable)
               p {{ props.row.scenario }}

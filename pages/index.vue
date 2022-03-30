@@ -50,11 +50,11 @@
               p {{ getPercentCompliance(groupByRegion[props.row.id]) }} %
             b-table-column(field="mobile" label="Mobile" width="40" sortable v-slot="props")
               p {{ getMobile(groupByRegion[props.row.id]) }}
-            b-table-column(field="mobile" label="Mobile Compliance" width="40" :subheading="(Array.from({length: 10}, (_,index) => this.getMobileCompliance(groupByRegion[index])).reduce((a,c) => Number(a) + Number(c)) / 10).toFixed(2) + ' %'" sortable v-slot="props")
+            b-table-column(field="mobile" label="Mobile Compliance" width="40" :subheading="(Array.from({length: 10}, (_,index) => this.getMobileCompliance(groupByRegion[index])).reduce((a,c) => Number(a) + Number(c)) / activeRegions).toFixed(2) + ' %'" sortable v-slot="props")
               p {{ getMobileCompliance(groupByRegion[props.row.id]) }} %
             b-table-column(field="noMobile" label="No Mobile" width="40" sortable v-slot="props")
               p {{ getNoMobile(groupByRegion[props.row.id]) }}
-            b-table-column(field="noMobile" label="No Mobile Compliance" width="40" :subheading="(Array.from({length: 10}, (_,index) => this.getNoMobileCompliance(groupByRegion[index])).reduce((a,c) => Number(a) + Number(c)) / 10).toFixed(2) + ' %'" sortable v-slot="props")
+            b-table-column(field="noMobile" label="No Mobile Compliance" width="40" :subheading="(Array.from({length: 10}, (_,index) => this.getNoMobileCompliance(groupByRegion[index])).reduce((a,c) => Number(a) + Number(c)) / activeRegions).toFixed(2) + ' %'" sortable v-slot="props")
               p {{ getNoMobileCompliance(groupByRegion[props.row.id]) }} %
         
 </template>
@@ -145,7 +145,8 @@ export default {
         fontSize: 20,
       },
     };
-    return { entrys , groupByRegion, options }
+    const activeRegions = Object.getOwnPropertyNames(groupByRegion).length
+    return { entrys , groupByRegion, options, activeRegions }
   },
   methods:{
     getDevices(dataByRegion){
@@ -165,7 +166,7 @@ export default {
     },
     getTotalCompliance(groupByRegion){
       const compliance = Array.from({length: 10}, (_,index) => this.getPercentCompliance(groupByRegion[index]))
-      return (compliance.reduce((a,c) => Number(a) + Number(c)) / 10).toFixed(2)
+      return (compliance.reduce((a,c) => Number(a) + Number(c)) / this.activeRegions).toFixed(2)
     },
     pieRegion(groupByRegion){
       const devices = Array.from({length: 10}, (_,index) => this.getDevices(groupByRegion[index]))
