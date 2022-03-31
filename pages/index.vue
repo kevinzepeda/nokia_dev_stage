@@ -6,16 +6,16 @@
     .columns
       .column.is-4
         .container(v-if="groupByRegion !== null")
-            h2.subtitle Devices by Region
-            pie-chart(:data="pieRegion(groupByRegion)" :options="options")
+          h2.subtitle Devices by Region
+          VueApexCharts(:options="options" :series="pieRegion(groupByRegion)")
       .column.is-4
         .container(v-if="groupByRegion !== null")
           h2.subtitle Mobile Compliance
-          pie-chart(:data="pieMobileCompliance(groupByRegion)" :options="optionsMobile" )
+          VueApexCharts(:options="optionsMobile" :series="pieMobileCompliance(groupByRegion)")
       .column.is-4
         .container(v-if="groupByRegion !== null")
           h2.subtitle No Mobile Compliance
-          pie-chart(:data="pieNoMobileCompliance(groupByRegion)" :options="optionsNoMobile" )
+          VueApexCharts(:options="optionsMobile" :series="pieNoMobileCompliance(groupByRegion)")
     .columns
       .column
         b-table(:data="regiones"
@@ -40,8 +40,6 @@
               nuxt-link(:to="'region/' + props.row.id") {{ props.row.name }}
             b-table-column(field="entidades" label="Total Devices" :subheading="getTotalDevices(groupByRegion)" width="40" sortable v-slot="props")
               p {{ getDevices(groupByRegion[props.row.id]) }}
-            b-table-column(field="entidades" label="% Devices" width="40" sortable v-slot="props")
-              p {{ (getDevices(groupByRegion[props.row.id]) / getTotalDevices(groupByRegion) * 100).toFixed(2) }}%
             b-table-column(field="entidades" label="Total Units" width="40" sortable v-slot="props")
               p {{ groupByRegion[props.row.id] ? groupByRegion[props.row.id].length : 0 }}
             b-table-column(field="compliance" label="Qos Compliance" width="40" sortable v-slot="props")
@@ -96,32 +94,23 @@ export default {
       inputDebounce: '',
       checkboxPosition: 'right',
       optionsMobile: {
-        responsive: true,
-        maintainAspectRatio: false,
-        devicePixelRatio: 2,
-        tooltips: {
-          enabled: true,
+        chart: {
+          width: 380,
+          type: 'pie',
         },
-        title: {
-          display: true,
-          text: '% Compliance in Mobile',
-          position: 'bottom',
-          fontSize: 20,
-        },
-      },
-      optionsNoMobile: {
-        responsive: true,
-        maintainAspectRatio: false,
-        devicePixelRatio: 2,
-        tooltips: {
-          enabled: true,
-        },
-        title: {
-          display: true,
-          text: '% Compliance in No Mobile',
-          position: 'bottom',
-          fontSize: 20,
-        },
+        colors: ["#1bd7a6","#fe5858"],
+        labels: ["Compliance","No QoS"],
+        responsive: [{
+          breakpoint: 600,
+          options: {
+            chart: {
+              width: 200
+            },
+            legend: {
+              position: 'bottom'
+            }
+          }
+        }]
       }
     }
   },
@@ -134,18 +123,23 @@ export default {
       return group;
     }, {});
     const options = {
-      responsive: true,
-      maintainAspectRatio: false,
-      devicePixelRatio: 2,
-      tooltips: {
-        enabled: true,
+      chart: {
+        width: 380,
+        type: 'pie',
       },
-      title: {
-        display: true,
-        text: '% Device by Region',
-        position: 'bottom',
-        fontSize: 20,
-      },
+      colors: ["#FF69B4", "#FF6347","#FFD700","#7B68EE","#00FF7F","#1E90FF","#D2691E","#2F4F4F","#FFE4C4","#00008B"],
+      labels: ['Unknow', 'Region 1', 'Region 2', 'Region 3', 'Region 4', 'Region 5','Region 6','Region 7', 'Region 8', 'Region 9'],
+      responsive: [{
+        breakpoint: 480,
+        options: {
+          chart: {
+            width: 200
+          },
+          legend: {
+            position: 'bottom'
+          }
+        }
+      }]
     };
     const activeRegions = Object.getOwnPropertyNames(groupByRegion).length
     return { entrys , groupByRegion, options, activeRegions }
@@ -173,51 +167,22 @@ export default {
     pieRegion(groupByRegion){
       const devices = Array.from({length: 10}, (_,index) => this.getDevices(groupByRegion[index]))
       const total = devices.reduce((acumulator,current) => acumulator + current)
-      const percent = Array.from({length: 10}, (_, index) => (devices[index] / total * 100).toFixed(2))
-      return {
-        hoverBackgroundColor: "red",
-        hoverBorderWidth: 5,
-        labels: ["R0","R1","R2","R3","R4","R5","R6","R7","R8","R9"],
-        datasets: [
-          {
-            label: "Data One",
-            backgroundColor: ["#41B883", "#E46651","#BF00FF","#F2F5A9","#5858FA","#F2E0F7","#A9F5A9","#E6E0F8","#D8D8D8","#F5A9A9"],
-            data: percent
-          }
-        ]
-      }
+      const percent = Array.from({length: 10}, (_, index) => this.roundOff((devices[index] / total * 100),2) )
+      return percent 
     },
     pieMobileCompliance(groupByRegion){
       const mobile = Array.from({length: 10}, (_,index) => this.getMobileCompliance(groupByRegion[index]))
-      const percent = mobile.reduce((a,c) => Number(a) + Number(c)) / 10
-      return {
-        hoverBackgroundColor: "red",
-        hoverBorderWidth: 5,
-        labels: ["Compliance","No QoS"],
-        datasets: [
-          {
-            label: "Mobile compliance",
-            backgroundColor: ["#1bd7a6","#fe5858"],
-            data: [percent.toFixed(2), (100 - percent).toFixed(2)]
-          }
-        ]
-      }
+      const percent = mobile.reduce((a,c) => Number(a) + Number(c)) / this.activeRegions
+      return [percent, (100 - percent)]
     },
     pieNoMobileCompliance(groupByRegion){
       const mobile = Array.from({length: 10}, (_,index) => this.getNoMobileCompliance(groupByRegion[index]))
-      const percent = mobile.reduce((a,c) => Number(a) + Number(c)) / 10
-      return {
-        hoverBackgroundColor: "red",
-        hoverBorderWidth: 5,
-        labels: ["Compliance","No QoS"],
-        datasets: [
-          {
-            label: "Mobile compliance",
-            backgroundColor: ["#1bd7a6","#fe5858"],
-            data: [percent.toFixed(2), (100 - percent).toFixed(2)]
-          }
-        ]
-      }
+      const percent = mobile.reduce((a,c) => Number(a) + Number(c)) / this.activeRegions
+      return [percent, (100 - percent)]
+    },
+    roundOff(num, places) {
+      const x = Math.pow(10,places);
+      return Math.round(num * x) / x;
     },
     getMobile(dataByRegion){
       if(dataByRegion){

@@ -57,13 +57,7 @@
       .column.is-3
         .container(v-if="ip !== null")
           h3.subtitle Device Compliance
-          .container
-            p Compliance: 
-              b {{ compliant }}%
-            p Not QoS: 
-              b {{ notCompliant }}%
-            p ___
-            pie-chart(:data="pieData(groupByIP)" :options="options")
+          VueApexCharts(:options="options" :series="pieData(groupByIP)")
 </template>
 
 <script>
@@ -88,7 +82,26 @@ export default {
       inputPosition: '',
       inputDebounce: '',
       checkboxPosition: 'left',
-      checked: []
+      checked: [],
+      options: {
+        chart: {
+          width: 380,
+          type: 'pie',
+        },
+        colors: ["#1bd7a6","#fe5858"],
+        labels: ["Compliance","No QoS"],
+        responsive: [{
+          breakpoint: 600,
+          options: {
+            chart: {
+              width: 200
+            },
+            legend: {
+              position: 'bottom'
+            }
+          }
+        }]
+      },
     }
   },
   async asyncData({ $axios }) {
@@ -99,22 +112,7 @@ export default {
       group[source_ip].push(entry);
       return group;
     }, {});
-    const options = {
-      responsive: true,
-      maintainAspectRatio: false,
-      devicePixelRatio: 2,
-      tooltips: {
-        enabled: true,
-      },
-      title: {
-        display: true,
-        text: '% Compliance by device',
-        position: 'bottom',
-        fontSize: 20,
-      },
-    }
-
-    return { entrys , groupByIP, options }
+    return { entrys , groupByIP }
   },
   methods:{
     dataByIP(groupByIP){
@@ -131,23 +129,14 @@ export default {
     },
     pieData(groupByIP){
       const data = groupByIP[this.ip]
-      if (this.ip !== null){
-        this.compliant = (data.filter((i) =>{ return i.is_compliant}).length / data.length * 100).toFixed(1)
-        this.notCompliant = (100 - this.compliant).toFixed(1)
-      }
-      return {
-        hoverBackgroundColor: "red",
-        hoverBorderWidth: 5,
-        labels: ["Compliance", "Not compliance"],
-        datasets: [
-          {
-            label: "Data One",
-            backgroundColor: ["#41B883", "#E46651"],
-            data: [this.compliant, this.notCompliant]
-          }
-        ]
-      }
-    }
+      const compliant = this.roundOff(data.filter((i) =>{ return i.is_compliant}).length / data.length * 100,2)
+      const notCompliant = this.roundOff(100 - compliant,2)
+      return [compliant,notCompliant]
+    },
+    roundOff(num, places) {
+      const x = Math.pow(10,places);
+      return Math.round(num * x) / x;
+    },
   },
   fetch(){
       this.ip = this.$route.params.ip

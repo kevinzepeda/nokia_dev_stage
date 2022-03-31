@@ -55,13 +55,7 @@
               .has-text-centered No Devices info
       .column.is-3
         .h2.subtitle Region compliance
-        .container
-          p Compliance: 
-            b {{ compliant }}%
-          p Not QoS: 
-            b {{ notCompliant }}%
-          p ___
-          pie-chart(:data="pieData(dataByRegion)" :options="options")
+        VueApexCharts(:options="options" :series="pieData(dataByRegion)")
 </template>
 
 <script>
@@ -82,8 +76,8 @@ export default {
         {id: "9", name: "Region 9"},
       ],
       region: null,
-      compliant: 0,
-      notCompliant: 0,
+      compliant: 90,
+      notCompliant: 10,
       checked: [],
       columns: [],
       isPaginated: true,
@@ -99,7 +93,26 @@ export default {
       paginationOrder: '',
       inputPosition: '',
       inputDebounce: '',
-      checkboxPosition: 'right'
+      checkboxPosition: 'right',
+      options: {
+        chart: {
+          width: 380,
+          type: 'pie',
+        },
+        colors: ["#1bd7a6","#fe5858"],
+        labels: ["Compliance","No QoS"],
+        responsive: [{
+          breakpoint: 600,
+          options: {
+            chart: {
+              width: 200
+            },
+            legend: {
+              position: 'bottom'
+            }
+          }
+        }]
+      }
     }
   },
   async asyncData({ $axios , params}) {
@@ -121,40 +134,13 @@ export default {
       group[source_ip].push(entry);
       return group;
     }, {});
-    const options = {
-      responsive: true,
-      maintainAspectRatio: false,
-      devicePixelRatio: 2,
-      tooltips: {
-        enabled: true,
-      },
-      title: {
-        display: true,
-        text: '% Compliance by region',
-        position: 'bottom',
-        fontSize: 20,
-      },
-    }
-    return { dataByRegion, options, allDevices, groupByIP}
+    return { dataByRegion, allDevices, groupByIP}
   },
   methods:{
     pieData(dataByRegion){
-      if (this.region !== null){
-        this.compliant = (dataByRegion.filter((i) => { return i.is_compliant}).length / dataByRegion.length * 100).toFixed(1)
-        this.notCompliant = (100 - this.compliant).toFixed(1)
-      }
-      return {
-        hoverBackgroundColor: "red",
-        hoverBorderWidth: 5,
-        labels: ["Compliance", "Not QoS"],
-        datasets: [
-          {
-            label: "Data One",
-            backgroundColor: ["#41B883", "#E46651"],
-            data: [this.compliant, this.notCompliant]
-          }
-        ]
-      }
+      const compliant = this.roundOff(dataByRegion.filter((i) => { return i.is_compliant}).length / dataByRegion.length * 100,2)
+      const notCompliant = this.roundOff(100 - compliant,2)
+      return [compliant, notCompliant]
     },
     getFile(){
       this.$axios.post("https://5c92-2806-105e-c-7a1b-3b3b-4664-9df7-4ca9.ngrok.io/", {
@@ -164,6 +150,10 @@ export default {
           const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/zip' }))
           window.open(url)
       })
+    },
+    roundOff(num, places) {
+      const x = Math.pow(10,places);
+      return Math.round(num * x) / x;
     },
   },
   computed:{
