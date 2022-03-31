@@ -1809,7 +1809,7 @@
     "normalize-path" "^3.0.0"
     "picomatch" "^2.0.4"
 
-"apexcharts@^3.26.0":
+"apexcharts@^3.26.0", "apexcharts@^3.34.0":
   "integrity" "sha512-0HMwkTRm4lwuM4TZ+BjFynXuIRQnCG8E36k2r0JoxEfh61rY6OmRa6iFHlTQiyILpemPyTHxuPvK4wkR8RKc9A=="
   "resolved" "https://registry.npmjs.org/apexcharts/-/apexcharts-3.34.0.tgz"
   "version" "3.34.0"
