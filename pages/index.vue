@@ -172,8 +172,8 @@ export default {
     },
     pieMobileCompliance(groupByRegion){
       const mobile = Array.from({length: 10}, (_,index) => this.getMobileCompliance(groupByRegion[index]))
-      const percent = mobile.reduce((a,c) => Number(a) + Number(c)) / this.activeRegions
-      return [percent, (100 - percent)]
+      const percent = this.roundOff(mobile.reduce((a,c) => Number(a) + Number(c)) / this.activeRegions,2)
+      return [percent, this.roundOff(100 - percent,2)]
     },
     pieNoMobileCompliance(groupByRegion){
       const mobile = Array.from({length: 10}, (_,index) => this.getNoMobileCompliance(groupByRegion[index]))
