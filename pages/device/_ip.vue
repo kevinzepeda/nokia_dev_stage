@@ -119,7 +119,7 @@ export default {
       return groupByIP[this.ip]
     },
     getFile(){
-      this.$axios.post("https://5c92-2806-105e-c-7a1b-3b3b-4664-9df7-4ca9.ngrok.io/", {
+      this.$axios.post("http://myattmx.duckdns.org/", {
         items: this.checked
       },{ responseType: 'blob'})
       .then((response) => {
