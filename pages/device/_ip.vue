@@ -119,7 +119,7 @@ export default {
       return groupByIP[this.ip]
     },
     getFile(){
-      this.$axios.post("https://facf-2806-105e-c-9edf-3fbd-6828-b384-2349.ngrok.io/", {
+      this.$axios.post("https://c341-187-208-185-121.ngrok.io/", {
         items: this.checked
       },{ responseType: 'blob'})
       .then((response) => {
