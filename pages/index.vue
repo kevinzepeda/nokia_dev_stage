@@ -208,6 +208,9 @@ export default {
       let percent = 0
       if(dataByRegion){
         d = dataByRegion.filter(i => !i.mobile)
+        if(d.length == 0){
+          return 0
+        }
         percent = (d.filter(i => i.is_compliant).length / d.length * 100).toFixed(2)
       }
       return percent
