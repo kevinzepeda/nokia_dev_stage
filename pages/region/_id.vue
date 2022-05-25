@@ -143,7 +143,7 @@ export default {
       return [compliant, notCompliant]
     },
     getFile(){
-      this.$axios.post("https://de3e-2806-105e-c-7c29-38bd-e2f8-f8e8-ce0a.ngrok.io", {
+      this.$axios.post("https://a99d-2806-105e-c-56e2-f0d6-719-a64d-468a.ngrok.io", {
         items: this.toCreateMOP
       },{ responseType: 'blob'})
       .then((response) => {
